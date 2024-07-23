@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Title>DevToys Json to C# extension</Title>
+    <Authors>Devbeat</Authors>
+    <Company>Devbeat</Company>
+    <Description>Adds Json to C# capabilities for DevToys 2.0.</Description>
+    <PackageId>DevToys.JsonToCsharp</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Devbeat-io/devtoys-extensions</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Devbeat-io/</PackageProjectUrl>
+    <Version>1.1.0</Version>
+    <PackageTags>devtoys-app, json, csharp, extension, jsontocsharp</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DevToys.Api" Version="2.0.2-preview" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="docs\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="JsonToCSharpExtension.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>JsonToCSharpExtension.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="JsonToCSharpExtension.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>JsonToCSharpExtension.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
