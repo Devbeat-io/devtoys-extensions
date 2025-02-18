@@ -138,6 +138,9 @@
   <data name="LongDisplayTitle" xml:space="preserve">
     <value>JSON &gt; C#</value>
   </data>
+  <data name="NumberType" xml:space="preserve">
+    <value>Number Type</value>
+  </data>
   <data name="ShortDisplayTitle" xml:space="preserve">
     <value>JSON &gt; C#</value>
   </data>

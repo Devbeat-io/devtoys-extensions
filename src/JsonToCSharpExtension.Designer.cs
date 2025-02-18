@@ -124,6 +124,15 @@ namespace Devbeat.DTE.JsonToCSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number Type.
+        /// </summary>
+        internal static string NumberType {
+            get {
+                return ResourceManager.GetString("NumberType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to JSON &gt; C#.
         /// </summary>
         internal static string ShortDisplayTitle {
