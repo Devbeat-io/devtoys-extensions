@@ -1,4 +1,5 @@
-﻿using Devbeat.DTE.JsonToCSharp.Represesentation;
+﻿using Devbeat.DTE.JsonToCSharp.Models;
+using Devbeat.DTE.JsonToCSharp.Represesentation;
 using System.Text.Json;
 
 namespace Devbeat.DTE.JsonToCSharp.Converter;
@@ -7,19 +8,22 @@ internal sealed class ConvertToCSharp
 {
     private readonly string _json;
     private readonly string? _namespaceName;
+    private static string _numberType = string.Empty;
 
-    internal static ConvertToCSharp LoadFromText(string json, string? namespaceName = null)
-        => new (json, namespaceName);
+    internal static ConvertToCSharp LoadFromText(string json, string? namespaceName = null, string numberType = "int")
+        => new (json, namespaceName, numberType);
     
-    private ConvertToCSharp(string json, string? namespaceName)
+    private ConvertToCSharp(string json, string? namespaceName, string numberType)
     {
         _json = json;
         _namespaceName = namespaceName;
+        _numberType = numberType;
     }
 
     internal CSharpCode Convert()
     {
         CSharpCode root = new (_namespaceName ?? "Untitled");
+
         if (string.IsNullOrEmpty(_json)) return root;
 
         try
@@ -44,7 +48,8 @@ internal sealed class ConvertToCSharp
         , string path
         , string name
         , ICSharpObject root
-        , bool parentIsArray = false)
+        , bool parentIsArray = false
+        )
     {
         switch (element.ValueKind)
         {
@@ -89,7 +94,7 @@ internal sealed class ConvertToCSharp
                 AddProperty(root, name, element, null);
                 break;
             case JsonValueKind.Number:
-                AddProperty(root, name, element, "long");
+                AddProperty(root, name, element, _numberType);
                 break;
             case JsonValueKind.True:
             case JsonValueKind.False:
@@ -125,17 +130,17 @@ internal sealed class ConvertToCSharp
         if (e is null) return fallbackType;
 
         JsonValueKind valueKind = e.Value.ValueKind;
+        if (valueKind == JsonValueKind.Undefined)
+        {
+            return "string";
+        }
         if (valueKind == JsonValueKind.True || valueKind == JsonValueKind.False)
         {
             return "bool";
         }
         if (valueKind == JsonValueKind.Number)
         {
-            return "long";
-        }
-        if (valueKind == JsonValueKind.Undefined)
-        {
-            return "string";
+            return _numberType;
         }
 
         var value = e.Value.ToString();
@@ -148,13 +153,14 @@ internal sealed class ConvertToCSharp
         {
             return "Guid";
         }
-        if (long.TryParse(value, out var _))
-        {
-            return "long";
-        }
+        if (!string.IsNullOrEmpty(value)) return "string";
         if (int.TryParse(value, out var _))
         {
             return "int";
+        }
+        if (long.TryParse(value, out var _))
+        {
+            return "long";
         }
         if (bool.TryParse(value, out var _))
         {

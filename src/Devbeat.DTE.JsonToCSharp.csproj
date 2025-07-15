@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevToys.Api" Version="2.0.2-preview" />
+    <PackageReference Include="DevToys.Api" Version="2.0.8-preview" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +38,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>JsonToCSharpExtension.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
