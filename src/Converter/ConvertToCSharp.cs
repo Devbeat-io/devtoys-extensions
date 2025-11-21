@@ -8,16 +8,26 @@ internal sealed class ConvertToCSharp
 {
     private readonly string _json;
     private readonly string? _namespaceName;
-    private static string _numberType = string.Empty;
+    private readonly string _numberType = string.Empty;
+    private readonly OutputType _outputType = OutputType.Class;
+    private readonly bool _forceNullProperties = false;
 
-    internal static ConvertToCSharp LoadFromText(string json, string? namespaceName = null, string numberType = "int")
-        => new (json, namespaceName, numberType);
+    internal static ConvertToCSharp LoadFromText(
+        string json
+        , string? namespaceName = null
+        , string numberType = "int"
+        , OutputType outputType = OutputType.Class
+        , bool forceNullProperties = false)
+        => new (json, namespaceName, numberType, outputType, forceNullProperties);
     
-    private ConvertToCSharp(string json, string? namespaceName, string numberType)
+    private ConvertToCSharp(
+        string json, string? namespaceName, string numberType, OutputType outputType, bool forceNullProperties)
     {
         _json = json;
         _namespaceName = namespaceName;
         _numberType = numberType;
+        _outputType = outputType;
+        _forceNullProperties = forceNullProperties;
     }
 
     internal CSharpCode Convert()
@@ -37,13 +47,13 @@ internal sealed class ConvertToCSharp
 
             return root;
         }
-        catch (Exception e)
+        catch
         {
             throw;
         }
     }
 
-    private static void ParseElement(
+    private void ParseElement(
         JsonElement element
         , string path
         , string name
@@ -54,7 +64,11 @@ internal sealed class ConvertToCSharp
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                var classItem = root.Root.AddClass(FixCasing(name));
+                CSharpClassBase classItem =
+                    _outputType == OutputType.Class 
+                        ? root.Root.AddClass(global::Devbeat.DTE.JsonToCSharp.Converter.ConvertToCSharp.FixCasing(name)) 
+                        : root.Root.AddRecord(global::Devbeat.DTE.JsonToCSharp.Converter.ConvertToCSharp.FixCasing(name));
+
                 if (root is CSharpClass sharpClass && parentIsArray == false)
                 {
                     sharpClass.AddProperty(FixCasing(name), classItem.Name);
@@ -91,14 +105,14 @@ internal sealed class ConvertToCSharp
                 }
                 break;
             case JsonValueKind.String:
-                AddProperty(root, name, element, null);
+                AddProperty(root, name, element, null, _forceNullProperties);
                 break;
             case JsonValueKind.Number:
-                AddProperty(root, name, element, _numberType);
+                AddProperty(root, name, element, _numberType, _forceNullProperties);
                 break;
             case JsonValueKind.True:
             case JsonValueKind.False:
-                AddProperty(root, name, element, "bool");
+                AddProperty(root, name, element, "bool", _forceNullProperties);
                 break;
             case JsonValueKind.Null:
                 AddProperty(root, name, element, "string", true);
@@ -108,7 +122,7 @@ internal sealed class ConvertToCSharp
         }
     }
 
-    private static void AddProperty(
+    private void AddProperty(
         ICSharpObject root
         , string name
         , JsonElement element
@@ -121,52 +135,60 @@ internal sealed class ConvertToCSharp
                 FixCasing(name)
                 , typeName ?? DetermineType(element)
                 , isCollection: false
-                , isNullable ?? false);
+                , isNullable ?? _forceNullProperties);
+        }
+        if (root is CSharpRecord sharpRecord)
+        {
+            sharpRecord.AddProperty(
+                FixCasing(name)
+                , typeName ?? DetermineType(element)
+                , isCollection: false
+                , isNullable ?? _forceNullProperties);
         }
     }
 
-    private static string DetermineType(JsonElement? e, string fallbackType = "string")
+    private string DetermineType(JsonElement? e, string fallbackType = "string")
     {
-        if (e is null) return fallbackType;
+        if (e is null) return fallbackType + (_forceNullProperties ? "?" : "");
 
         JsonValueKind valueKind = e.Value.ValueKind;
         if (valueKind == JsonValueKind.Undefined)
         {
-            return "string";
+            return "string" + (_forceNullProperties ? "?" : "");
         }
         if (valueKind == JsonValueKind.True || valueKind == JsonValueKind.False)
         {
-            return "bool";
+            return "bool" + (_forceNullProperties ? "?" : "");
         }
         if (valueKind == JsonValueKind.Number)
         {
-            return _numberType;
+            return _numberType + (_forceNullProperties ? "?" : "");
         }
 
         var value = e.Value.ToString();
         if (string.IsNullOrEmpty(value)) return "string";
         if (DateTime.TryParse(value, out var _))
         {
-            return "DateTime";
+            return "DateTime" + (_forceNullProperties ? "?" : "");
         }
         if (Guid.TryParse(value, out var _))
         {
-            return "Guid";
+            return "Guid" + (_forceNullProperties ? "?" : "");
         }
         if (!string.IsNullOrEmpty(value)) return "string";
         if (int.TryParse(value, out var _))
         {
-            return "int";
+            return "int" + (_forceNullProperties ? "?" : "");
         }
         if (long.TryParse(value, out var _))
         {
-            return "long";
+            return "long" + (_forceNullProperties ? "?" : "");
         }
         if (bool.TryParse(value, out var _))
         {
-            return "bool";
+            return "bool" + (_forceNullProperties ? "?" : "");
         }
-        return "string";
+        return "string" + (_forceNullProperties ? "?" : "");
     }
 
     private static string FixCasing(string input)

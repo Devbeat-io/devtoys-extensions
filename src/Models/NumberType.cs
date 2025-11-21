@@ -4,22 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Devbeat.DTE.JsonToCSharp.Models
-{
-    internal enum NumberType
-    {
-        Int,
-        Long,
-        Float,
-        Double,
-        Decimal
-    }
+namespace Devbeat.DTE.JsonToCSharp.Models;
 
-    internal static class NumberTypeExtensions
+internal enum NumberType
+{
+    Int,
+    Long,
+    Float,
+    Double,
+    Decimal
+}
+
+internal static class NumberTypeExtensions
+{
+    public static string ToLowerString(this NumberType numberType)
     {
-        public static string ToLowerString(this NumberType numberType)
-        {
-            return numberType.ToString().ToLower();
-        }
+        return numberType.ToString().ToLower();
     }
 }

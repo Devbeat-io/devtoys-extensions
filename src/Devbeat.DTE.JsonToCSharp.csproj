@@ -18,6 +18,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <None Remove="Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DevToys.Api" Version="2.0.8-preview" />
   </ItemGroup>
 
@@ -38,10 +44,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>JsonToCSharpExtension.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
