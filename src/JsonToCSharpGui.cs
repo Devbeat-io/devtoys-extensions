@@ -23,23 +23,24 @@ namespace Devbeat.DTE.JsonToCSharp;
     AccessibleNameResourceName = nameof(JsonToCSharpExtension.AccessibleName))]
 internal sealed class JsonToCSharpGui : IGuiTool
 {
+    private static readonly SettingDefinition<NumberType> _numberTypeDefinition
+        = new(name: $"{nameof(JsonToCSharpGui)}.{nameof(_numberTypeDefinition)}", defaultValue: NumberType.Long);
 
-    /// <summary>
-    /// Which indentation the tool need to use.
-    /// </summary>
-    private static readonly SettingDefinition<NumberType> numberType
-        = new(name: $"{nameof(JsonToCSharpGui)}.{nameof(numberType)}", defaultValue: NumberType.Long);
+    private static readonly SettingDefinition<bool> _forceNullPropertiesDefinition
+        = new(name: $"{nameof(JsonToCSharpGui)}.{nameof(_forceNullPropertiesDefinition)}", defaultValue: false);
+
+    private static readonly SettingDefinition<OutputType> _outputTypeDefinition
+        = new(name: $"{nameof(JsonToCSharpGui)}.{nameof(_outputTypeDefinition)}", defaultValue: OutputType.Class);
 
     [Import] // Import the settings provider.
-    private ISettingsProvider _settingsProvider = null;
+    private ISettingsProvider _settingsProvider = null!;
 
     private readonly IUIMultiLineTextInput _inputTextArea = MultiLineTextInput("json-to-csharp-input-text-area");
     private readonly IUIMultiLineTextInput _outputTextArea = MultiLineTextInput("json-to-csharp-output-text-area");
 
     private string _namespaceName = "DefaultNamespace";
-
-    private readonly IUISetting _numberTypeOptionUISetting = Setting();
-
+    private bool _forceNullProperties = false;
+    private OutputType _outputType = OutputType.Class;
 
     private enum GridColumn
     {
@@ -71,28 +72,54 @@ internal sealed class JsonToCSharpGui : IGuiTool
                     GridRow.Header,
                     GridColumn.Content,
                     Stack()
-                    .Vertical()
-                    .WithChildren(
-                        Label()
-                        .Text(JsonToCSharpExtension.ConvertJsonToCSharpConfigurationTitle), SingleLineTextInput("json-to-csharp-namespace-name")
-                            .Title("Namespace")
-                            .Text(_namespaceName)
-                            .OnTextChanged((s) => { _namespaceName = s; }),
-
-                        _numberTypeOptionUISetting
-                        .Icon("FluentSystemIcons", '\uF57D')
-                        .Title(JsonToCSharpExtension.NumberType)
-                        .Handle(
-                            _settingsProvider,
-                            numberType,
-                            OnNumberTypeModeChanged,
-                            Item("int", NumberType.Int),
-                            Item("long", NumberType.Long),
-                            Item("float", NumberType.Float),
-                            Item("double", NumberType.Double),
-                            Item("decimal", NumberType.Decimal)
+                        .Vertical()
+                        .WithChildren(
+                            Label()
+                                .Text(JsonToCSharpExtension.ConvertJsonToCSharpConfigurationTitle), SingleLineTextInput("json-to-csharp-namespace-name")
+                                    .Title("Namespace")
+                                    .Text(_namespaceName)
+                                    .OnTextChanged((s) => { _namespaceName = s; }),
+                            SettingGroup()
+                                .Title("Advanced")
+                                .Icon("FluentSystemIcons", '\uF6A8')
+                                .WithSettings(
+                                    Setting()
+                                        .Icon("FluentSystemIcons", '\uF57C')
+                                        .Title(JsonToCSharpExtension.NumberType)
+                                        .Handle(
+                                            _settingsProvider,
+                                            _numberTypeDefinition,
+                                            OnNumberTypeModeChanged,
+                                            Item("int", NumberType.Int),
+                                            Item("long", NumberType.Long),
+                                            Item("float", NumberType.Float),
+                                            Item("double", NumberType.Double),
+                                            Item("decimal", NumberType.Decimal)
+                                        ),
+                                    Setting()
+                                        .Icon("FluentSystemIcons", '\uF637')
+                                        .Title("Force Null Properties")
+                                        .Description("Make all properties nullable regardless of their value in the JSON.")
+                                        .Handle(
+                                            _settingsProvider,
+                                            _forceNullPropertiesDefinition,
+                                            stateDescriptionWhenOn: "Force null",
+                                            stateDescriptionWhenOff: "No force",
+                                            OnForceNullProperties
+                                        ),
+                                    Setting()
+                                        .Icon("FluentSystemIcons", '\uEBC8')
+                                        .Title("Output Type")
+                                        .Description("Currently only 'class' output type is supported.")
+                                        .Handle(
+                                            _settingsProvider,
+                                            _outputTypeDefinition,
+                                            OnOutputTypeChanged
+                                                , Item("Class", OutputType.Class)
+                                                , Item("Record", OutputType.Record)
+                                        )
+                                )
                         )
-                    )
                 ),
                 Cell(
                     GridRow.Content,
@@ -123,6 +150,17 @@ internal sealed class JsonToCSharpGui : IGuiTool
         }
     }
 
+    private void OnForceNullProperties(bool isOn)
+    {
+        _forceNullProperties = isOn;
+        StartConvert(_inputTextArea.Text);
+    }
+    private void OnOutputTypeChanged(OutputType outputType)
+    {
+        _outputType = outputType;
+        StartConvert(_inputTextArea.Text);
+    }
+
     private void OnNumberTypeModeChanged(NumberType numType)
     {
         StartConvert(_inputTextArea.Text);
@@ -144,11 +182,16 @@ internal sealed class JsonToCSharpGui : IGuiTool
         try
         {
             var csharpRepresentation = ConvertToCSharp
-                .LoadFromText(text, _namespaceName, _settingsProvider.GetSetting(numberType).ToLowerString())
+                .LoadFromText(
+                    text, _namespaceName
+                    , _settingsProvider.GetSetting(_numberTypeDefinition).ToLowerString()
+                    , _outputType
+                    , _forceNullProperties)
                 .Convert();
 
+            var output = CSharpWriter.CreateNew();
             _outputTextArea.Text(
-                CSharpWriter.Write(csharpRepresentation));
+                output.Write(csharpRepresentation));
         }
         catch
         {

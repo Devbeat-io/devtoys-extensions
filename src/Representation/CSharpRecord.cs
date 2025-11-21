@@ -1,6 +1,8 @@
-﻿namespace Devbeat.DTE.JsonToCSharp.Represesentation;
+﻿using System.Xml.Linq;
 
-internal class CSharpClass(
+namespace Devbeat.DTE.JsonToCSharp.Represesentation;
+
+internal class CSharpRecord(
     string name, CSharpCode root) 
     : CSharpClassBase(name, root)
 {
@@ -9,7 +11,7 @@ internal class CSharpClass(
     //internal CSharpClassProperty[] Properties => _list.ToArray();
     //public CSharpCode Root { get; } = root;
 
-    //public CSharpClass AddProperty(
+    //public CSharpRecord AddProperty(
     //    string name
     //    , string type
     //    , bool isCollection = false
@@ -20,5 +22,5 @@ internal class CSharpClass(
     //    var p = new CSharpClassProperty(name, type, Root, isCollection, isNullable);
     //    _list.Add(p);
     //    return this;
-    //} 
+    //}
 }
