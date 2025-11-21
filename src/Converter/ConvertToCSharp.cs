@@ -66,8 +66,8 @@ internal sealed class ConvertToCSharp
             case JsonValueKind.Object:
                 CSharpClassBase classItem =
                     _outputType == OutputType.Class 
-                        ? root.Root.AddClass(FixCasing(name)) 
-                        : root.Root.AddRecord(FixCasing(name));
+                        ? root.Root.AddClass(global::Devbeat.DTE.JsonToCSharp.Converter.ConvertToCSharp.FixCasing(name)) 
+                        : root.Root.AddRecord(global::Devbeat.DTE.JsonToCSharp.Converter.ConvertToCSharp.FixCasing(name));
 
                 if (root is CSharpClass sharpClass && parentIsArray == false)
                 {
@@ -149,7 +149,7 @@ internal sealed class ConvertToCSharp
 
     private string DetermineType(JsonElement? e, string fallbackType = "string")
     {
-        if (e is null) return fallbackType;
+        if (e is null) return fallbackType + (_forceNullProperties ? "?" : "");
 
         JsonValueKind valueKind = e.Value.ValueKind;
         if (valueKind == JsonValueKind.Undefined)
@@ -191,7 +191,7 @@ internal sealed class ConvertToCSharp
         return "string" + (_forceNullProperties ? "?" : "");
     }
 
-    private string FixCasing(string input)
+    private static string FixCasing(string input)
     {
         if (string.IsNullOrEmpty(input))
         {

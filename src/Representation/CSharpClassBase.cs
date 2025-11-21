@@ -9,7 +9,7 @@ internal abstract class CSharpClassBase(
 
     private readonly List<CSharpClassProperty> _list = [];
     //internal string Name { get; } = name;
-    internal CSharpClassProperty[] Properties => _list.ToArray();
+    internal CSharpClassProperty[] Properties => [.. _list];
 
     internal void AddProperty(CSharpClassProperty p)
     {

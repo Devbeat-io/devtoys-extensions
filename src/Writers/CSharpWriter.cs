@@ -66,6 +66,8 @@ internal sealed class CSharpWriter
 
     private void WriteBeginClass(StringWriter writer, string name, bool writeAsRecord)
     {
+        _hasWrittenProperty = false;
+
         if (writeAsRecord)
         {
             writer.WriteLine($"{NEWLINE}public record {name}(");
